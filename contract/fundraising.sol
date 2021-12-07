@@ -24,6 +24,8 @@ contract fundraising {
         string image;
         string endDate;
         uint target;
+        uint verifiedCount;
+        bool verified;
     }
     
 	//Storage list project
@@ -31,6 +33,12 @@ contract fundraising {
 	//Storage balance of project
     mapping (uint => uint) internal projectBalances;
     uint internal projectCount = 0;
+
+    modifier onlyOwner(uint _index) {
+        require(msg.sender == projects[_index].owner, "Not owner");
+        // execute the rest of the code.
+        _;
+    } 
 
 	//Increase balance of project
     function increaseBalance(uint _index, uint _amount) internal {
@@ -55,7 +63,9 @@ contract fundraising {
 			_description,
 			_image,
 			_endDate,
-			_target
+			_target,
+            0,
+            false
 		);
 		projectCount++;
     }
@@ -66,15 +76,20 @@ contract fundraising {
 		string memory, 
 		string memory, 
 		string memory, 
-		uint
+		uint,
+        uint,
+        bool
 	) {
+        Project storage project = projects[_index];
 		return (
-			projects[_index].owner, 
-			projects[_index].name, 
-			projects[_index].description, 
-			projects[_index].image,
-			projects[_index].endDate,
-			projects[_index].target
+			project.owner,
+            project.name,
+            project.description,
+            project.image,
+            project.endDate,
+            project.target,
+            project.verifiedCount,
+            project.verified
 		);
 	}
 	
@@ -82,6 +97,21 @@ contract fundraising {
 	function getProjectCount() public view returns (uint) {
 	    return (projectCount);
 	}
+
+    function changeTarget(uint _index, uint _target) public onlyOwner(_index){
+       projects[_index].target = _target;
+    }
+
+    function changeTime(uint _index, string memory _endDate) public onlyOwner(_index){
+        projects[_index].endDate = _endDate;
+    }
+
+    function verifyProject(uint _index) public {
+        projects[_index].verifiedCount++;
+        if(projects[_index].verifiedCount > 10){
+            projects[_index].verified = true;
+        }
+    }
 
 	//Donate amount cusd for project
 	function donate(uint _index, uint _amount) public payable  {
